@@ -1,0 +1,49 @@
+{{- if .Values.ingress.enabled -}}
+{{- $fullName := include "common.fullname" . -}}
+{{- $svcPort := .Values.service.port -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- if and (hasKey .Values.ingress "tls") (not (empty .Values.ingress.tls)) }}
+  tls:
+    {{- range .Values.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- else if and (not (hasKey .Values.ingress "tls")) (hasKey .Values.ingress "hosts") (not (empty .Values.ingress.hosts)) }}
+    {{- if gt (len .Values.ingress.hosts) 1 }}
+      {{- fail "Only one host is allowed in ingress.hosts" }}
+    {{- end }}
+  tls:
+    - hosts:
+        - {{ (index .Values.ingress.hosts 0).host | quote }}
+      secretName: {{ .Values.ingress.existingSecret | default (printf "%s-tls" (index .Values.ingress.hosts 0).host) }}
+  {{- end }}
+  rules:
+    {{- range (required "An array of hosts is required if ingress is enabled" .Values.ingress.hosts) }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range default (list (dict "path" "/")) .paths }}
+          - path: {{ .path }}
+            pathType: {{ default ("ImplementationSpecific") .pathType }}
+            backend:
+              service:
+                name: {{ $fullName }}
+                port:
+                  number: {{ $svcPort }}
+          {{- end }}
+    {{- end }}
+{{- end }}

@@ -1,0 +1,11 @@
+# IDE
+.project
+.idea/
+*.iml
+
+# VCS
+.git/
+.gitignore
+
+# Misc
+.DS_Store

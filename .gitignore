@@ -1,0 +1,7 @@
+# IDE
+.project
+.idea/
+*.iml
+
+# Misc
+.DS_Store

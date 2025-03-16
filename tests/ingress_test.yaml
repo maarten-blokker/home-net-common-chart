@@ -1,0 +1,82 @@
+suite: Test suite for NGINX chart
+templates:
+  - ingress.yaml
+
+tests:
+  - it: Should not render anything if not explicitly enabled
+    asserts:
+      - containsDocument:
+          kind: Ingress
+        not: true
+      - hasDocuments:
+          count: 0
+      - matchSnapshot: { }
+
+  - it: Should render an Ingress if it's enabled
+    set:
+      ingress.enabled: true
+    asserts:
+      - isKind:
+          of: Ingress
+
+  - it: should set annotations if given
+    set:
+      ingress.enabled: true
+      ingress.annotations:
+        kubernetes.io/ingress.class: nginx
+        kubernetes.io/tls-acme: "true"
+        ingress.kubernetes.io/rewrite-target: /
+    asserts:
+      - equal:
+          path: metadata.annotations
+          value:
+            kubernetes.io/ingress.class: nginx
+            kubernetes.io/tls-acme: "true"
+            ingress.kubernetes.io/rewrite-target: /
+
+  - it: should configure TLS by default based on host
+    set:
+      ingress.enabled: true
+      ingress.hosts:
+        - host: unit.test.com
+    asserts:
+      - equal:
+          path: spec.tls
+          value:
+            - hosts:
+                - unit.test.com
+              secretName: unit.test.com-tls
+
+  - it: should configure TLS by default based on host, but only if a single host is specified
+    set:
+      ingress.enabled: true
+      ingress.hosts:
+        - host: host1.test.com
+        - host: host2.test.com
+    asserts:
+      - failedTemplate: { }
+
+  - it: should configure TLS as is
+    set:
+      ingress.enabled: true
+      ingress.tls:
+        - hosts:
+            - one.local
+            - two.local
+          secretName: any.local.tls
+    asserts:
+      - equal:
+          path: spec.tls
+          value:
+            - hosts:
+                - one.local
+                - two.local
+              secretName: any.local.tls
+
+  - it: should disable TLS if an empty array is explicitly set
+    set:
+      ingress.enabled: true
+      ingress.tls: []
+    asserts:
+      - isNull:
+          path: spec.tls
