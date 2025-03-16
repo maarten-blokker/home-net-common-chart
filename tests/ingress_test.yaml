@@ -1,6 +1,6 @@
-suite: Test suite for NGINX chart
+suite: Test suite for ingress resource
 templates:
-  - ingress.yaml
+  - templates/ingress.yaml
 
 tests:
   - it: Should not render anything if not explicitly enabled
