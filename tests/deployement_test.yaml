@@ -84,3 +84,52 @@ tests:
               drop:
                 - ALL
 
+  - it: Should create a pod with a liveness probe
+    set:
+      livenessProbe:
+        enabled: true
+        httpGet:
+          path: /health
+          port: http
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "common")].livenessProbe
+          value:
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: http
+
+  - it: Should create a pod with a readiness probe
+    set:
+      readinessProbe:
+        enabled: true
+        exec:
+          command: [ "cat", "/tmp/healthy" ]
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "common")].readinessProbe
+          value:
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 3
+            exec:
+              command: [ "cat", "/tmp/healthy" ]
+
+  - it: Should create a pod with a startup probe
+    set:
+      startupProbe:
+        enabled: true
+        tcpSocket:
+          port: http
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "common")].startupProbe
+          value:
+            initialDelaySeconds: 10
+            periodSeconds: 1
+            tcpSocket:
+              port: http
+

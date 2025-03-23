@@ -34,10 +34,72 @@
     "imagePullSecrets": {
       "type": "array",
       "items": {
-        "type": "string"
         "type": "string",
         "description": "Used to provide authentication credentials for pulling container images from private registries."
       }
+    },
+    "livenessProbe": {
+      "description": "Liveness probe checks if the container is still running. If it fails, Kubernetes will restart the container.",
+      "allOf": [
+        {
+          "$ref": "#/definitions/probe"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "description": "Enable or disable the probe."
+            }
+          },
+          "required": [
+            "enabled"
+          ]
+        }
+      ]
+    },
+    "readinessProbe": {
+      "description": "Readiness probe checks if the container is ready to serve traffic. If it fails, the pod is removed from the service's endpoints.",
+      "allOf": [
+        {
+          "$ref": "#/definitions/probe"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "description": "Enable or disable the probe.",
+              "type": "boolean",
+              "default": false
+            }
+          },
+          "required": [
+            "enabled"
+          ]
+        }
+      ]
+    },
+    "startupProbe": {
+      "description": "Startup probe checks if the container has successfully started. Useful for slow-starting applications.",
+      "allOf": [
+        {
+          "$ref": "#/definitions/probe"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "description": "Enable or disable the probe.",
+              "type": "boolean",
+              "default": false
+            }
+          },
+          "required": [
+            "enabled"
+          ]
+        }
+      ]
     },
     "nameOverride": {
       "type": "string"
@@ -190,9 +252,113 @@
       "type": "object"
     }
   },
+  "definitions": {
+    "probe": {
+      "type": "object",
+      "description": "Defines a probe configuration for Kubernetes containers.",
+      "properties": {
+        "httpGet": {
+          "type": "object",
+          "description": "HTTP request to perform the probe.",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Path to access on the container."
+            },
+            "port": {
+              "type": "string",
+              "description": "Port number or name to send the request to."
+            },
+            "httpHeaders": {
+              "type": "array",
+              "description": "Custom headers to include in the HTTP request.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Header name."
+                  },
+                  "value": {
+                    "type": "string",
+                    "description": "Header value."
+                  }
+                },
+                "required": [
+                  "name",
+                  "value"
+                ]
+              }
+            }
+          },
+          "required": [
+            "path",
+            "port"
+          ]
+        },
+        "grpc": {
+          "type": "object",
+          "description": "GRPC probe configuration.",
+          "properties": {
+            "port": {
+              "type": "integer",
+              "description": "GRPC service port number."
+            }
+          }
+        },
+        "tcpSocket": {
+          "type": "object",
+          "description": "TCP socket check for the probe.",
+          "properties": {
+            "port": {
+              "type": "string",
+              "description": "Port number or name for the TCP check."
+            }
+          }
+        },
+        "exec": {
+          "type": "object",
+          "description": "Executes a command inside the container for the probe.",
+          "properties": {
+            "command": {
+              "type": "array",
+              "description": "Command to execute.",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "initialDelaySeconds": {
+          "type": "integer",
+          "description": "Time in seconds to wait before starting the probe after container startup."
+        },
+        "periodSeconds": {
+          "type": "integer",
+          "description": "How often (in seconds) to perform the probe."
+        },
+        "timeoutSeconds": {
+          "type": "integer",
+          "description": "Time (in seconds) before the probe times out."
+        },
+        "failureThreshold": {
+          "type": "integer",
+          "description": "Number of consecutive failures before marking the container as unhealthy."
+        },
+        "successThreshold": {
+          "type": "integer",
+          "description": "Number of consecutive successes before marking the container as healthy."
+        }
+      },
+      "required": []
+    }
+  },
   "required": [
     "replicaCount",
     "image",
+    "livenessProbe",
+    "readinessProbe",
+    "startupProbe",
     "service",
     "autoscaling"
   ]

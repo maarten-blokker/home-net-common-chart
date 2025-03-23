@@ -35,6 +35,55 @@ service:
   type: ClusterIP
   port: 80
 
+## Configure liveness probe, checks if the container is still running as expected. If the liveness probe fails,
+## the kubelet kills the container.
+##
+## See: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+##
+## Example:
+## livenessProbe:
+##   enabled: true
+##   httpGet:
+##     path: /
+##     port: http
+##     httpHeaders:
+##       - name: Custom-Header
+##         value: Awesome
+##   grpc: { port: 2379 }
+##   tcpSocket: { port: http }
+##   exec:
+##     command: [ "cat", "/tmp/healthy" ]
+##   initialDelaySeconds: 0
+##   periodSeconds: 10
+##   timeoutSeconds: 1
+##   failureThreshold: 3
+##   successThreshold: 1
+##
+livenessProbe:
+  enabled: false
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  failureThreshold: 3
+
+## Configure readiness probe, which checks if the container is ready to handle traffic. If it fails, the pod will be
+## removed from the pool of available endpoints for services.
+##
+## See: check livenessProbe reference
+readinessProbe:
+  enabled: false
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  failureThreshold: 3
+
+## Configure startup probe, which checks if a container has successfully started, preventing premature termination for
+##  containers with long initialization times.
+##
+## See: check livenessProbe reference
+startupProbe:
+  enabled: false
+  initialDelaySeconds: 10
+  periodSeconds: 1
+
 ingress:
   enabled: false
   className: ""
