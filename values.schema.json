@@ -3,19 +3,26 @@
   "type": "object",
   "properties": {
     "replicaCount": {
-      "type": "integer"
+      "type": "integer",
+      "default": 1,
+      "minimum": 0,
+      "description": "Specifies the number of desired pods"
     },
     "image": {
       "type": "object",
       "properties": {
         "repository": {
-          "type": "string"
+          "type": "string",
+          "description": "Specifies the repository to pull the container image from."
         },
         "pullPolicy": {
-          "type": "string"
+          "type": "string",
+          "description": "Specifies when to pull the container image.",
+          "enum": ["Always", "IfNotPresent", "Never"]
         },
         "tag": {
-          "type": "string"
+          "type": "string",
+          "description": "Specifies the tag of the container image to pull."
         }
       },
       "required": [
@@ -28,6 +35,8 @@
       "type": "array",
       "items": {
         "type": "string"
+        "type": "string",
+        "description": "Used to provide authentication credentials for pulling container images from private registries."
       }
     },
     "nameOverride": {

@@ -1,0 +1,86 @@
+suite: Test suite for deployment resource
+templates:
+  - templates/deployment.yaml
+
+chart:
+  version: 1.2.3
+  appVersion: 3.2.1
+
+release:
+  name: unit-test
+
+tests:
+  - it: Should create a deployment
+    asserts:
+      - isKind:
+          of: Deployment
+
+  - it: Should set a replica count
+    set:
+      replicaCount: 5
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 5
+
+  - it: Should create a pod with a security context
+    set:
+      podSecurityContext:
+        fsGroup: 1000
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext
+          value:
+            fsGroup: 1000
+
+  - it: Should have correct labels
+    asserts:
+      - equal:
+          path: metadata.labels
+          value:
+            app.kubernetes.io/instance: unit-test
+            app.kubernetes.io/name: common
+            app.kubernetes.io/version: 3.2.1
+            app.kubernetes.io/managed-by: Helm
+            helm.sh/chart: common-1.2.3
+      - equal:
+          path: spec.selector.matchLabels
+          value:
+            app.kubernetes.io/instance: unit-test
+            app.kubernetes.io/name: common
+      - equal:
+          path: spec.template.metadata.labels
+          value:
+            app.kubernetes.io/instance: unit-test
+            app.kubernetes.io/name: common
+
+  - it: Should create a pod with a container using the specified image
+    set:
+      image:
+        repository: eu.gcr.io
+        tag: 1.2.3
+        pullPolicy: "Never"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "common")].image
+          value: eu.gcr.io:1.2.3
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "common")].imagePullPolicy
+          value: Never
+
+  - it: Should create a pod with a container using the specified security context
+    set:
+      securityContext:
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "common")].securityContext
+          value:
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+
