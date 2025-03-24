@@ -1,0 +1,118 @@
+suite: Test suite for horizontal pod autoscaler resource
+templates:
+  - hpa.yaml
+tests:
+  - it: Should create an HPA when autoscaling is enabled
+    set:
+      autoscaling:
+        enabled: true
+        minReplicas: 2
+        maxReplicas: 5
+    asserts:
+      - exists:
+          path: metadata.name
+      - equal:
+          path: kind
+          value: HorizontalPodAutoscaler
+      - equal:
+          path: spec.minReplicas
+          value: 2
+      - equal:
+          path: spec.maxReplicas
+          value: 5
+
+  - it: Should not create an HPA when autoscaling is disabled
+    set:
+      autoscaling:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: Should target the correct deployment
+    set:
+      autoscaling:
+        enabled: true
+        targetCPUUtilizationPercentage: 80
+    asserts:
+      - equal:
+          path: spec.scaleTargetRef.apiVersion
+          value: "apps/v1"
+      - equal:
+          path: spec.scaleTargetRef.kind
+          value: "Deployment"
+      - equal:
+          path: spec.scaleTargetRef.name
+          value: "RELEASE-NAME-common"
+
+  - it: Should include CPU utilization target when defined
+    set:
+      autoscaling:
+        enabled: true
+        targetCPUUtilizationPercentage: 90
+    asserts:
+      - equal:
+          path: spec.metrics
+          value:
+            - type: Resource
+              resource:
+                name: cpu
+                target:
+                  type: Utilization
+                  averageUtilization: 90
+
+  - it: Should include memory utilization target when defined
+    set:
+      autoscaling:
+        enabled: true
+        targetMemoryUtilizationPercentage: 60
+    asserts:
+      - equal:
+          path: spec.metrics
+          value:
+            - type: Resource
+              resource:
+                name: memory
+                target:
+                  type: Utilization
+                  averageUtilization: 60
+
+  - it: Should include both CPU and memory utilization targets when both are defined
+    set:
+      autoscaling:
+        enabled: true
+        targetCPUUtilizationPercentage: 80
+        targetMemoryUtilizationPercentage: 65
+    asserts:
+      - lengthEqual:
+          path: spec.metrics
+          count: 2
+      - equal:
+          path: spec.metrics[?(@.resource.name == "cpu")].resource
+          value:
+            name: cpu
+            target:
+              averageUtilization: 80
+              type: Utilization
+      - equal:
+          path: spec.metrics[?(@.resource.name == "memory")].resource
+          value:
+            name: memory
+            target:
+              averageUtilization: 65
+              type: Utilization
+
+  - it: Should include a default utilization target when no target is define
+    set:
+      autoscaling:
+        enabled: true
+    asserts:
+      - equal:
+          path: spec.metrics
+          value:
+            - type: Resource
+              resource:
+                name: cpu
+                target:
+                  type: Utilization
+                  averageUtilization: 75
