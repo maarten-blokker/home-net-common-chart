@@ -15,6 +15,18 @@ tests:
       - isKind:
           of: Deployment
 
+  - it: Should set pod annotations
+    set:
+      podAnnotations:
+        home-net/application-name: "Pi-hole"
+        home-net/application-type: "DNS"
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations
+          value:
+            home-net/application-name: "Pi-hole"
+            home-net/application-type: "DNS"
+
   - it: Should set a replica count
     set:
       replicaCount: 5
@@ -22,6 +34,21 @@ tests:
       - equal:
           path: spec.replicas
           value: 5
+
+  - it: Should not allow a negative replica count
+    set:
+      replicaCount: -1
+    asserts:
+      - failedTemplate:
+          errorPattern: "replicaCount: Must be greater than or equal to 0"
+
+  - it: should not set replica count when autoscaling is enabled
+    set:
+      autoscaling:
+        enabled: true
+    asserts:
+      - notExists:
+          path: spec.replicas
 
   - it: Should create a pod with a security context
     set:
@@ -67,6 +94,17 @@ tests:
       - equal:
           path: spec.template.spec.containers[?(@.name == "common")].imagePullPolicy
           value: Never
+
+
+  - it: Should include imagePullSecrets when defined
+    set:
+      imagePullSecrets:
+        - name: "my-secret"
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets
+          value:
+            - name: "my-secret"
 
   - it: Should create a pod with a container using the specified security context
     set:
@@ -133,3 +171,48 @@ tests:
             tcpSocket:
               port: http
 
+  - it: Should set nodeSelector when defined
+    set:
+      nodeSelector:
+        disktype: ssd
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector.disktype
+          value: "ssd"
+
+  - it: Should set affinity when defined
+    set:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: disktype
+                    operator: In
+                    values:
+                      - ssd
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity.nodeAffinity
+          value:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: disktype
+                      operator: In
+                      values:
+                        - ssd
+
+  - it: Should set tolerations when defined
+    set:
+      tolerations:
+        - key: "example-key"
+          operator: "Exists"
+          effect: "NoSchedule"
+    asserts:
+      - equal:
+          path: spec.template.spec.tolerations
+          value:
+            - key: "example-key"
+              operator: "Exists"
+              effect: "NoSchedule"

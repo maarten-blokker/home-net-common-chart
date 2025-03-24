@@ -18,7 +18,11 @@
         "pullPolicy": {
           "type": "string",
           "description": "Specifies when to pull the container image.",
-          "enum": ["Always", "IfNotPresent", "Never"]
+          "enum": [
+            "Always",
+            "IfNotPresent",
+            "Never"
+          ]
         },
         "tag": {
           "type": "string",
@@ -33,9 +37,16 @@
     },
     "imagePullSecrets": {
       "type": "array",
+      "description": "A list of secrets used to pull images from private registries.",
       "items": {
-        "type": "string",
-        "description": "Used to provide authentication credentials for pulling container images from private registries."
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the Kubernetes secret containing registry credentials."
+          }
+        },
+        "required": ["name"]
       }
     },
     "livenessProbe": {
