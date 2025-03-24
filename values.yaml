@@ -129,10 +129,15 @@ resources: {}
   #   memory: 128Mi
 
 autoscaling:
+  ## Set to true to enable Horizontal Pod Autoscaler (HPA)
   enabled: false
+  ## Minimum number of replicas allowed
   minReplicas: 1
+  ## Maximum number of replicas allowed
   maxReplicas: 3
-  targetCPUUtilizationPercentage: 80
+  ## Target CPU utilization percentage for scaling
+  # targetCPUUtilizationPercentage: 80
+  ## Target Memory utilization percentage for scaling
   # targetMemoryUtilizationPercentage: 80
 
 nodeSelector: {}

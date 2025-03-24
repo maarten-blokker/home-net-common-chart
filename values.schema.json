@@ -246,8 +246,7 @@
       "required": [
         "enabled",
         "minReplicas",
-        "maxReplicas",
-        "targetCPUUtilizationPercentage"
+        "maxReplicas"
       ]
     },
     "nodeSelector": {
