@@ -34,9 +34,11 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - name: http
-              containerPort: {{ .Values.service.port }}
-              protocol: TCP
+           {{- range .Values.ports }}
+            - name: {{ .name }}
+              containerPort: {{ required (printf "No containerPort or servicePort defined for port '%s'" .name) (or .containerPort .servicePort) }}
+              protocol: {{ .protocol | default "TCP" }}
+           {{- end }}
           {{- if .Values.livenessProbe.enabled }}
           livenessProbe:
             {{- omit .Values.livenessProbe "enabled" | toYaml | nindent 12 }}

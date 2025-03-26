@@ -146,20 +146,44 @@
     "securityContext": {
       "type": "object"
     },
+    "ports": {
+      "type": "array",
+      "description": "List of service ports",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the port"
+          },
+          "servicePort": {
+            "type": "integer",
+            "default": 80,
+            "description": "Port exposed by the service"
+          },
+          "containerPort": {
+            "type": "integer",
+            "description": "Port exposed by the container, if none specified, the service port is used"
+          },
+          "protocol": {
+            "type": "string",
+            "description": "Protocol used by the port",
+            "default": "TCP"
+          }
+        },
+        "required": ["name"],
+        "additionalProperties": false
+      }
+    },
     "service": {
       "type": "object",
       "properties": {
         "type": {
           "type": "string",
+          "enum": ["ClusterIP", "NodePort", "LoadBalancer", "ExternalName"],
           "default": "ClusterIP"
-        },
-        "port": {
-          "type": "integer"
         }
-      },
-      "required": [
-        "port"
-      ]
+      }
     },
     "ingress": {
       "type": "object",

@@ -122,6 +122,84 @@ tests:
               drop:
                 - ALL
 
+
+
+  - it: fails to render if ports list is empty
+    set:
+      ports: []
+    asserts:
+      - isNullOrEmpty:
+          path: spec.template.spec.containers[?(@.name == "common")].ports
+
+  - it: renders container port with default protocol
+    set:
+      ports:
+        - name: http
+          servicePort: 80
+          containerPort: 3000
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "common")].ports
+          value:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+
+  - it: renders multiple ports with mixed protocol and containerPort defined
+    set:
+      ports:
+        - name: web
+          containerPort: 8080
+        - name: metrics
+          containerPort: 9090
+          protocol: UDP
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "common")].ports
+          value:
+            - name: web
+              containerPort: 8080
+              protocol: TCP
+            - name: metrics
+              containerPort: 9090
+              protocol: UDP
+
+  - it: defaults containerPort to servicePort if not explicitly defined
+    set:
+      ports:
+        - name: web
+          servicePort: 8080
+        - name: metrics
+          servicePort: 9090
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "common")].ports
+          value:
+            - name: web
+              containerPort: 8080
+              protocol: TCP
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+
+  - it: defaults protocol to TCP if not provided
+    set:
+      ports:
+        - name: web
+          containerPort: 80
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "common")].ports[?(@.name == "web")].protocol
+          value: TCP
+
+  - it: should fail if a port is missing port numbers
+    set:
+      ports:
+        - name: web
+    asserts:
+      - failedTemplate:
+          errorPattern: "No containerPort or servicePort defined for port"
+
   - it: Should create a pod with a liveness probe
     set:
       livenessProbe:

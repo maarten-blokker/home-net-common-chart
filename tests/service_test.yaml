@@ -1,0 +1,70 @@
+suite: Test suite for service resource
+templates:
+  - service.yaml
+
+tests:
+  - it: should render a service by default
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: spec.type
+          value: ClusterIP
+      - equal:
+          path: spec.ports
+          value:
+            - name: http
+              port: 80
+              targetPort: http
+              protocol: TCP
+
+  - it: should render a service with type LoadBalancer
+    set:
+      service:
+        type: LoadBalancer
+    asserts:
+      - equal:
+          path: spec.type
+          value: LoadBalancer
+
+  - it: should render a service with multiple ports
+    set:
+      ports:
+        - name: web
+          servicePort: 8080
+        - name: metrics
+          servicePort: 9090
+          protocol: UDP
+    asserts:
+      - equal:
+          path: spec.ports
+          value:
+            - name: web
+              port: 8080
+              targetPort: web
+              protocol: TCP
+            - name: metrics
+              port: 9090
+              targetPort: metrics
+              protocol: UDP
+
+  - it: defaults servicePort to containerPort if not explicitly defined
+    set:
+      ports:
+        - name: web
+          containerPort: 8080
+    asserts:
+      - equal:
+          path: spec.ports
+          value:
+            - name: web
+              port: 8080
+              targetPort: web
+              protocol: TCP
+
+  - it: should not render service with no ports
+    set:
+      ports: []
+    asserts:
+      - failedTemplate:
+          errorPattern: "You must define .Values.ports"

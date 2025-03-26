@@ -80,3 +80,14 @@ tests:
     asserts:
       - isNull:
           path: spec.tls
+
+  - it: should fail if no http port is available and no paths are given
+    set:
+      ingress:
+        enabled: true
+      ports:
+        - name: metrics
+          servicePort: 9090
+    asserts:
+      - failedTemplate:
+          errorPattern: "no port with name 'http' in .Values.ports"

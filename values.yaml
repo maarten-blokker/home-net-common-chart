@@ -31,9 +31,15 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
+ports:
+  ## Define a list of ports available
+  - name: http
+    servicePort: 80
+    # containerPort: 8080
+    # protocol: TCP
+
 service:
   type: ClusterIP
-  port: 80
 
 ## Configure liveness probe, checks if the container is still running as expected. If the liveness probe fails,
 ## the kubelet kills the container.

@@ -1,6 +1,14 @@
 {{- if .Values.ingress.enabled -}}
 {{- $fullName := include "common.fullname" . -}}
-{{- $svcPort := .Values.service.port -}}
+{{- $httpPort := "" -}}
+
+{{/* Try to find a port named "http" in the list of service ports */}}
+{{- range .Values.ports }}
+  {{- if eq .name "http" }}
+    {{- $httpPort = .name }}
+  {{- end }}
+{{- end }}
+
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -43,7 +51,7 @@ spec:
               service:
                 name: {{ $fullName }}
                 port:
-                  number: {{ $svcPort }}
+                  name: {{ $httpPort | required "Ingress is enabled but no port with name 'http' in .Values.ports is defined." }}
           {{- end }}
     {{- end }}
 {{- end }}
