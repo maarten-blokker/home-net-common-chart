@@ -2,9 +2,9 @@
 {{- $fullName := include "common.fullname" . -}}
 {{- $httpPort := "" -}}
 
-{{/* Try to find a port named "http" in the list of service ports */}}
+{{/* Try to find a service port named "http" in the list of service ports */}}
 {{- range .Values.ports }}
-  {{- if eq .name "http" }}
+  {{- if and (eq .name "http") (hasKey . "servicePort") }}
     {{- $httpPort = .name }}
   {{- end }}
 {{- end }}
@@ -51,7 +51,7 @@ spec:
               service:
                 name: {{ $fullName }}
                 port:
-                  name: {{ $httpPort | required "Ingress is enabled but no port with name 'http' in .Values.ports is defined." }}
+                  name: {{ $httpPort | required "Ingress is enabled but no servicePort with name 'http' in .Values.ports is defined." }}
           {{- end }}
     {{- end }}
 {{- end }}

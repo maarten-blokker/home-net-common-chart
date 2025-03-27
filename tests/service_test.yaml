@@ -18,10 +18,48 @@ tests:
               targetPort: http
               protocol: TCP
 
+  - it: should not render service when there are no service ports
+    set:
+      ports:
+        - name: web
+          containerPort: 8080
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not render service with no ports
+    set:
+      ports: []
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render a service when a service port is defined
+    set:
+      ports:
+        - name: web
+          containerPort: 80
+          servicePort: 8080
+    asserts:
+      - equal:
+          path: spec.ports
+          value:
+            - name: web
+              port: 8080
+              targetPort: web
+              protocol: TCP
+      - equal:
+          path: spec.type
+          value: ClusterIP
+
   - it: should render a service with type LoadBalancer
     set:
       service:
         type: LoadBalancer
+      ports:
+        - name: web
+          containerPort: 80
+          servicePort: 8080
     asserts:
       - equal:
           path: spec.type
@@ -31,8 +69,10 @@ tests:
     set:
       ports:
         - name: web
+          containerPort: 80
           servicePort: 8080
         - name: metrics
+          containerPort: 90
           servicePort: 9090
           protocol: UDP
     asserts:
@@ -47,24 +87,3 @@ tests:
               port: 9090
               targetPort: metrics
               protocol: UDP
-
-  - it: defaults servicePort to containerPort if not explicitly defined
-    set:
-      ports:
-        - name: web
-          containerPort: 8080
-    asserts:
-      - equal:
-          path: spec.ports
-          value:
-            - name: web
-              port: 8080
-              targetPort: web
-              protocol: TCP
-
-  - it: should not render service with no ports
-    set:
-      ports: []
-    asserts:
-      - failedTemplate:
-          errorPattern: "You must define .Values.ports"

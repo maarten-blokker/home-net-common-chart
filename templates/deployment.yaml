@@ -36,7 +36,7 @@ spec:
           ports:
            {{- range .Values.ports }}
             - name: {{ .name }}
-              containerPort: {{ required (printf "No containerPort or servicePort defined for port '%s'" .name) (or .containerPort .servicePort) }}
+              containerPort: {{ .containerPort }}
               protocol: {{ .protocol | default "TCP" }}
            {{- end }}
           {{- if .Values.livenessProbe.enabled }}

@@ -3,7 +3,7 @@ templates:
   - templates/ingress.yaml
 
 tests:
-  - it: Should not render anything if not explicitly enabled
+  - it: does not render anything if not explicitly enabled
     asserts:
       - containsDocument:
           kind: Ingress
@@ -12,14 +12,14 @@ tests:
           count: 0
       - matchSnapshot: { }
 
-  - it: Should render an Ingress if it's enabled
+  - it: renders an Ingress if it's enabled
     set:
       ingress.enabled: true
     asserts:
       - isKind:
           of: Ingress
 
-  - it: should set annotations if given
+  - it: sets annotations if given
     set:
       ingress.enabled: true
       ingress.annotations:
@@ -34,7 +34,7 @@ tests:
             kubernetes.io/tls-acme: "true"
             ingress.kubernetes.io/rewrite-target: /
 
-  - it: should configure TLS by default based on host
+  - it: configures TLS by default based on host
     set:
       ingress.enabled: true
       ingress.hosts:
@@ -47,7 +47,7 @@ tests:
                 - unit.test.com
               secretName: unit.test.com-tls
 
-  - it: should configure TLS by default based on host, but only if a single host is specified
+  - it: configures TLS by default based on host, but only if a single host is specified
     set:
       ingress.enabled: true
       ingress.hosts:
@@ -56,7 +56,7 @@ tests:
     asserts:
       - failedTemplate: { }
 
-  - it: should configure TLS as is
+  - it: configures TLS as is
     set:
       ingress.enabled: true
       ingress.tls:
@@ -73,7 +73,7 @@ tests:
                 - two.local
               secretName: any.local.tls
 
-  - it: should disable TLS if an empty array is explicitly set
+  - it: disables TLS if an empty array is explicitly set
     set:
       ingress.enabled: true
       ingress.tls: []
@@ -81,13 +81,25 @@ tests:
       - isNull:
           path: spec.tls
 
-  - it: should fail if no http port is available and no paths are given
+  - it: fails if no http port is available and no paths are given
     set:
       ingress:
         enabled: true
       ports:
         - name: metrics
+          containerPort: 90
           servicePort: 9090
     asserts:
       - failedTemplate:
-          errorPattern: "no port with name 'http' in .Values.ports"
+          errorPattern: "no servicePort"
+
+  - it: fails if no http port is available and no paths are given
+    set:
+      ingress:
+        enabled: true
+      ports:
+        - name: http
+          containerPort: 90
+    asserts:
+      - failedTemplate:
+          errorPattern: "no servicePort"

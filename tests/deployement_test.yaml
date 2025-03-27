@@ -10,12 +10,12 @@ release:
   name: unit-test
 
 tests:
-  - it: Should create a deployment
+  - it: creates a deployment
     asserts:
       - isKind:
           of: Deployment
 
-  - it: Should set pod annotations
+  - it: sets pod annotations
     set:
       podAnnotations:
         home-net/application-name: "Pi-hole"
@@ -27,7 +27,7 @@ tests:
             home-net/application-name: "Pi-hole"
             home-net/application-type: "DNS"
 
-  - it: Should set a replica count
+  - it: sets a replica count
     set:
       replicaCount: 5
     asserts:
@@ -35,14 +35,14 @@ tests:
           path: spec.replicas
           value: 5
 
-  - it: Should not allow a negative replica count
+  - it: does not allow a negative replica count
     set:
       replicaCount: -1
     asserts:
       - failedTemplate:
           errorPattern: "replicaCount: Must be greater than or equal to 0"
 
-  - it: should not set replica count when autoscaling is enabled
+  - it: has no replica count when autoscaling is enabled
     set:
       autoscaling:
         enabled: true
@@ -50,7 +50,7 @@ tests:
       - notExists:
           path: spec.replicas
 
-  - it: Should create a pod with a security context
+  - it: creates a pod with a security context
     set:
       podSecurityContext:
         fsGroup: 1000
@@ -60,7 +60,7 @@ tests:
           value:
             fsGroup: 1000
 
-  - it: Should have correct labels
+  - it: has correct labels
     asserts:
       - equal:
           path: metadata.labels
@@ -81,7 +81,7 @@ tests:
             app.kubernetes.io/instance: unit-test
             app.kubernetes.io/name: common
 
-  - it: Should create a pod with a container using the specified image
+  - it: creates a pod with a container using the specified image
     set:
       image:
         repository: eu.gcr.io
@@ -96,7 +96,7 @@ tests:
           value: Never
 
 
-  - it: Should include imagePullSecrets when defined
+  - it: includes imagePullSecrets when defined
     set:
       imagePullSecrets:
         - name: "my-secret"
@@ -106,7 +106,7 @@ tests:
           value:
             - name: "my-secret"
 
-  - it: Should create a pod with a container using the specified security context
+  - it: creates a pod with a container using the specified security context
     set:
       securityContext:
         readOnlyRootFilesystem: true
@@ -122,8 +122,6 @@ tests:
               drop:
                 - ALL
 
-
-
   - it: fails to render if ports list is empty
     set:
       ports: []
@@ -135,7 +133,6 @@ tests:
     set:
       ports:
         - name: http
-          servicePort: 80
           containerPort: 3000
     asserts:
       - equal:
@@ -164,24 +161,6 @@ tests:
               containerPort: 9090
               protocol: UDP
 
-  - it: defaults containerPort to servicePort if not explicitly defined
-    set:
-      ports:
-        - name: web
-          servicePort: 8080
-        - name: metrics
-          servicePort: 9090
-    asserts:
-      - equal:
-          path: spec.template.spec.containers[?(@.name == "common")].ports
-          value:
-            - name: web
-              containerPort: 8080
-              protocol: TCP
-            - name: metrics
-              containerPort: 9090
-              protocol: TCP
-
   - it: defaults protocol to TCP if not provided
     set:
       ports:
@@ -192,15 +171,7 @@ tests:
           path: spec.template.spec.containers[?(@.name == "common")].ports[?(@.name == "web")].protocol
           value: TCP
 
-  - it: should fail if a port is missing port numbers
-    set:
-      ports:
-        - name: web
-    asserts:
-      - failedTemplate:
-          errorPattern: "No containerPort or servicePort defined for port"
-
-  - it: Should create a pod with a liveness probe
+  - it: creates a pod with a liveness probe
     set:
       livenessProbe:
         enabled: true
@@ -218,7 +189,7 @@ tests:
               path: /health
               port: http
 
-  - it: Should create a pod with a readiness probe
+  - it: creates a pod with a readiness probe
     set:
       readinessProbe:
         enabled: true
@@ -234,7 +205,7 @@ tests:
             exec:
               command: [ "cat", "/tmp/healthy" ]
 
-  - it: Should create a pod with a startup probe
+  - it: creates a pod with a startup probe
     set:
       startupProbe:
         enabled: true
@@ -249,7 +220,7 @@ tests:
             tcpSocket:
               port: http
 
-  - it: Should set nodeSelector when defined
+  - it: sets a nodeSelector when defined
     set:
       nodeSelector:
         disktype: ssd
@@ -258,7 +229,7 @@ tests:
           path: spec.template.spec.nodeSelector.disktype
           value: "ssd"
 
-  - it: Should set affinity when defined
+  - it: sets affinity when defined
     set:
       affinity:
         nodeAffinity:
@@ -281,7 +252,7 @@ tests:
                       values:
                         - ssd
 
-  - it: Should set tolerations when defined
+  - it: sets tolerations when defined
     set:
       tolerations:
         - key: "example-key"

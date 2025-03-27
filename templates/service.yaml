@@ -1,7 +1,11 @@
-{{- if or (not .Values.ports) (eq (len .Values.ports) 0) -}}
-  {{- fail "You must define .Values.ports with at least one port entry." -}}
+{{- $servicePorts := list }}
+{{- range .Values.ports }}
+  {{- if hasKey . "servicePort" }}
+    {{- $servicePorts = append $servicePorts . }}
+  {{- end }}
 {{- end }}
 
+{{- if $servicePorts }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -11,11 +15,12 @@ metadata:
 spec:
   type: {{ .Values.service.type }}
   ports:
-    {{- range .Values.ports }}
+    {{- range $servicePorts }}
     - name: {{ .name }}
-      port: {{ required (printf "No servicePort or containerPort defined for port '%s'" .name) (or .servicePort .containerPort) }}
+      port: {{ .servicePort }}
       targetPort: {{ .name }}
       protocol: {{ .protocol | default "TCP" }}
     {{- end }}
   selector:
     {{- include "common.selectorLabels" . | nindent 4 }}
+{{- end }}

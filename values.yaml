@@ -34,8 +34,8 @@ securityContext: {}
 ports:
   ## Define a list of ports available
   - name: http
+    containerPort: 8080
     servicePort: 80
-    # containerPort: 8080
     # protocol: TCP
 
 service:
