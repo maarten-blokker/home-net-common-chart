@@ -1,3 +1,29 @@
+{{- $volumes := list }}
+{{- $volumeMounts := list }}
+
+{{- range .Values.volumes }}
+  {{- $volume := omit . "mount" }}
+  {{- $volumes = append $volumes $volume }}
+  {{- if hasKey . "mount" }}
+    {{- $volumeMount := merge (dict "name" .name) .mount }}
+    {{- $volumeMounts = append $volumeMounts $volumeMount }}
+  {{- end }}
+{{- end }}
+
+{{- range .Values.persistentVolumeClaims }}
+  {{- $volume := dict
+      "name" .name
+      "persistentVolumeClaim"
+        (dict "claimName" (printf "%s-%s" (include "common.fullname" $) .name))
+  }}
+  {{- $volumes = append $volumes $volume }}
+
+  {{- if hasKey . "mount" }}
+    {{- $volumeMount := merge (dict "name" .name) .mount }}
+    {{- $volumeMounts = append $volumeMounts $volumeMount }}
+  {{- end }}
+{{- end }}
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -53,6 +79,23 @@ spec:
           {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          {{- if gt (len $volumeMounts) 0 }}
+          volumeMounts:
+            {{- range $volumeMounts }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+              {{- with .subPath }}
+              subPath: {{ . }}
+              {{- end }}
+              {{- if .readOnly }}
+              readOnly: {{ .readOnly }}
+              {{- end }}
+            {{- end }}
+          {{- end }}
+      {{- if gt (len $volumes) 0 }}
+      volumes:
+        {{- toYaml $volumes | nindent 8 }}
+      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

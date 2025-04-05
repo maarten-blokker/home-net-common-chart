@@ -1,0 +1,104 @@
+suite: Test suite for persistent volume claim resource
+templates:
+  - templates/pvc.yaml
+
+release:
+  name: unit-test
+
+tests:
+  - it: should not render volumes or volumeMounts if PVC list is empty
+    set:
+      persistentVolumeClaims: [ ]
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render a PVC
+    set:
+      persistentVolumeClaims:
+        - name: data
+          accessModes: [ "ReadWriteOnce" ]
+          storageClassName: local-path
+          resources:
+            requests:
+              storage: 1Gi
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.name
+          value: unit-test-common-data
+      - equal:
+          path: spec
+          value:
+            accessModes: [ "ReadWriteOnce" ]
+            storageClassName: local-path
+            resources:
+              requests:
+                storage: 1Gi
+
+  - it: should render multiple PVCs
+    set:
+      persistentVolumeClaims:
+        - name: cache
+          resources:
+            requests:
+              storage: 10Gi
+        - name: tmp
+          accessModes: [ "ReadWriteMany" ]
+          storageClassName: ssd
+          resources:
+            requests:
+              storage: 5Gi
+    asserts:
+      - hasDocuments:
+          count: 2
+      - equal:
+          path: metadata.name
+          value: unit-test-common-cache
+        documentIndex: 0
+      - equal:
+          path: spec
+          value:
+            accessModes: [ "ReadWriteOnce" ]
+            resources:
+              requests:
+                storage: 10Gi
+        documentIndex: 0
+      - equal:
+          path: metadata.name
+          value: unit-test-common-tmp
+        documentIndex: 1
+      - equal:
+          path: spec
+          value:
+            accessModes: [ "ReadWriteMany" ]
+            storageClassName: ssd
+            resources:
+              requests:
+                storage: 5Gi
+        documentIndex: 1
+
+  - it: should omit storageClassName if not specified
+    set:
+      persistentVolumeClaims:
+        - name: simple
+          resources:
+            requests:
+              storage: 1Gi
+    asserts:
+      - notExists:
+          path: spec.storageClassName
+
+  - it: should default accessModes to "ReadWriteOnce"
+    set:
+      persistentVolumeClaims:
+        - name: simple
+          resources:
+            requests:
+              storage: 1Gi
+    asserts:
+      - equal:
+          path: spec.accessModes
+          value:
+            - ReadWriteOnce

@@ -88,13 +88,15 @@ tests:
         tag: 1.2.3
         pullPolicy: "Never"
     asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 1
       - equal:
-          path: spec.template.spec.containers[?(@.name == "common")].image
+          path: spec.template.spec.containers[0].image
           value: eu.gcr.io:1.2.3
       - equal:
-          path: spec.template.spec.containers[?(@.name == "common")].imagePullPolicy
+          path: spec.template.spec.containers[0].imagePullPolicy
           value: Never
-
 
   - it: includes imagePullSecrets when defined
     set:
@@ -115,7 +117,7 @@ tests:
             - ALL
     asserts:
       - equal:
-          path: spec.template.spec.containers[?(@.name == "common")].securityContext
+          path: spec.template.spec.containers[0].securityContext
           value:
             readOnlyRootFilesystem: true
             capabilities:
@@ -124,10 +126,10 @@ tests:
 
   - it: fails to render if ports list is empty
     set:
-      ports: []
+      ports: [ ]
     asserts:
       - isNullOrEmpty:
-          path: spec.template.spec.containers[?(@.name == "common")].ports
+          path: spec.template.spec.containers[0].ports
 
   - it: renders container port with default protocol
     set:
@@ -136,7 +138,7 @@ tests:
           containerPort: 3000
     asserts:
       - equal:
-          path: spec.template.spec.containers[?(@.name == "common")].ports
+          path: spec.template.spec.containers[0].ports
           value:
             - name: http
               containerPort: 3000
@@ -152,7 +154,7 @@ tests:
           protocol: UDP
     asserts:
       - equal:
-          path: spec.template.spec.containers[?(@.name == "common")].ports
+          path: spec.template.spec.containers[0].ports
           value:
             - name: web
               containerPort: 8080
@@ -168,7 +170,7 @@ tests:
           containerPort: 80
     asserts:
       - equal:
-          path: spec.template.spec.containers[?(@.name == "common")].ports[?(@.name == "web")].protocol
+          path: spec.template.spec.containers[0].ports[?(@.name == "web")].protocol
           value: TCP
 
   - it: creates a pod with a liveness probe
@@ -180,7 +182,7 @@ tests:
           port: http
     asserts:
       - equal:
-          path: spec.template.spec.containers[?(@.name == "common")].livenessProbe
+          path: spec.template.spec.containers[0].livenessProbe
           value:
             initialDelaySeconds: 5
             periodSeconds: 5
@@ -197,7 +199,7 @@ tests:
           command: [ "cat", "/tmp/healthy" ]
     asserts:
       - equal:
-          path: spec.template.spec.containers[?(@.name == "common")].readinessProbe
+          path: spec.template.spec.containers[0].readinessProbe
           value:
             initialDelaySeconds: 5
             periodSeconds: 5
@@ -213,7 +215,7 @@ tests:
           port: http
     asserts:
       - equal:
-          path: spec.template.spec.containers[?(@.name == "common")].startupProbe
+          path: spec.template.spec.containers[0].startupProbe
           value:
             initialDelaySeconds: 10
             periodSeconds: 1
@@ -265,3 +267,110 @@ tests:
             - key: "example-key"
               operator: "Exists"
               effect: "NoSchedule"
+
+  - it: "should render volumes with their volumeMounts"
+    set:
+      volumes:
+        - name: vol-nfs
+          nfs:
+            server: 10.0.0.1
+            path: /exports/shared
+          mount:
+            mountPath: "/mnt/vol/media"
+            subPath: "media"
+            readOnly: true
+        - name: vol-logs
+          hostPath:
+            path: /var/log/my-app
+            type: DirectoryOrCreate
+          mount:
+            mountPath: /var/logs
+        - name: vol-dir
+          emptyDir: { }
+          mount:
+            mountPath: "/mnt/vol/tmp"
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes
+          value:
+            - name: "vol-nfs"
+              nfs:
+                server: 10.0.0.1
+                path: /exports/shared
+            - name: vol-logs
+              hostPath:
+                path: /var/log/my-app
+                type: DirectoryOrCreate
+            - name: vol-dir
+              emptyDir: { }
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts
+          value:
+            - name: vol-nfs
+              mountPath: /mnt/vol/media
+              subPath: media
+              readOnly: true
+            - name: vol-logs
+              mountPath: /var/logs
+            - name: vol-dir
+              mountPath: /mnt/vol/tmp
+
+  - it: "renders volumeMounts only for persistent volume claims with a mount"
+    set:
+      persistentVolumeClaims:
+        - name: pvc-with-mount
+          accessModes: [ "ReadWriteOnce" ]
+          storageClassName: standard
+          resources:
+            requests:
+              storage: 5Gi
+          mount:
+            mountPath: /data
+        - name: pvc-no-mount
+          accessModes: [ "ReadWriteOnce" ]
+          storageClassName: standard
+          resources:
+            requests:
+              storage: 10Gi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts
+          value:
+            - name: pvc-with-mount
+              mountPath: /data
+
+  - it: "should render a combination of volumes and persistent volume claims"
+    set:
+      volumes:
+        - name: cache
+          emptyDir: { }
+          mount:
+            mountPath: /tmp/cache
+            readOnly: false
+      persistentVolumeClaims:
+        - name: data
+          accessModes: [ "ReadWriteOnce" ]
+          storageClassName: standard
+          resources:
+            requests:
+              storage: 1Gi
+          mount:
+            mountPath: /opt/data
+            subPath: downloads
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes
+          value:
+            - emptyDir: { }
+              name: cache
+            - name: data
+              persistentVolumeClaim:
+                claimName: unit-test-common-data
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts
+          value:
+            - mountPath: /tmp/cache
+              name: cache
+            - mountPath: /opt/data
+              name: data
+              subPath: downloads

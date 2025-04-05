@@ -112,6 +112,45 @@
         }
       ]
     },
+    "volumes": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.0/_definitions.json#/definitions/io.k8s.api.core.v1.Volume"
+          },
+          {
+            "type": "object",
+            "required": ["mount"],
+            "properties": {
+              "mount": {
+                 "$ref": "#/definitions/volumeMounts"
+              }
+            }
+          }
+        ]
+      },
+      "default": []
+    },
+    "persistentVolumeClaims": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.0/_definitions.json#/definitions/io.k8s.api.core.v1.PersistentVolumeClaimSpec"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "mount": {
+                "$ref": "#/definitions/volumeMounts"
+              }
+            }
+          }
+        ]
+      },
+      "default": []
+    },
     "nameOverride": {
       "type": "string"
     },
@@ -396,6 +435,26 @@
         }
       },
       "required": []
+    },
+    "volumeMounts":  {
+      "type": "object",
+      "required": ["mountPath"],
+      "properties": {
+        "mountPath": {
+          "type": "string",
+          "description": "Path inside the container to mount the volume"
+        },
+        "subPath": {
+          "type": "string",
+          "description": "Optional sub-path within the volume"
+        },
+        "readOnly": {
+          "type": "boolean",
+          "description": "Whether to mount the volume as read-only",
+          "default": false
+        }
+      },
+      "additionalProperties": false
     }
   },
   "required": [
@@ -404,6 +463,8 @@
     "livenessProbe",
     "readinessProbe",
     "startupProbe",
+    "volumes",
+    "persistentVolumeClaims",
     "service",
     "autoscaling"
   ]

@@ -90,6 +90,44 @@ startupProbe:
   initialDelaySeconds: 10
   periodSeconds: 1
 
+## Additional volumes to be mounted, such as NFS, hostPath, or emptyDir.
+volumes: [ ]
+## Example:
+##   - name: nfs-volume
+##     nfs:
+##       server: 10.0.0.1
+##       path: /exports/shared
+##     mount:
+##       mountPath: /mnt/nfs
+##
+##   - name: host-logs
+##     hostPath:
+##       path: /var/log/my-app
+##       type: DirectoryOrCreate
+##     mount:
+##       mountPath: /logs
+##
+##   - name: temp-storage
+##     emptyDir: {}
+##     mount:
+##       mountPath: /tmp
+
+## List of PersistentVolumeClaims to be created and mounted into the pod.
+## Each entry defines both the claim (spec) and its mount path.
+persistentVolumeClaims: [ ]
+## Example:
+## persistentVolumeClaims:
+##   - name: data                         # Unique identifier (used in PVC name and volume reference)
+##     accessModes: ["ReadWriteOnce"]     # Access mode: RWO, ROX, or RWX (default: ReadWriteOnce)
+##     storageClassName: standard         # Optional: specify a StorageClass (omit to use default)
+##     resources:
+##       requests:
+##         storage: 1Gi                   # Requested storage size (e.g., 500Mi, 1Gi)
+##     mount:
+##       mountPath: /data                      # Mount path inside the container
+##       readOnly: true
+##       subPath: downloads
+
 ingress:
   enabled: false
   className: ""
