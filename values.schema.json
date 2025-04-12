@@ -227,7 +227,7 @@
     "envVars": {
       "type": "array",
       "items": {
-        "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.26.7-standalone/envvar-v1.json",
+        "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.0/envvar-v1.json",
         "additionalProperties": false
       },
       "description": "User-defined environment variables."
@@ -235,7 +235,7 @@
     "envVarsBase": {
       "type": "array",
       "items": {
-        "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.26.7-standalone/envvar-v1.json",
+        "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.29.0/envvar-v1.json",
         "additionalProperties": false
       },
       "description": "Base set of environment variables provided by the chart."
