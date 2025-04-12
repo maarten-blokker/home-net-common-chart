@@ -375,6 +375,27 @@ tests:
               name: data
               subPath: downloads
 
+  - it: should not include initContainers when not set
+    set:
+      initContainers: []
+    asserts:
+      - notExists:
+          path: spec.template.spec.initContainers
+
+  - it: should include initContainers when set
+    set:
+      initContainers:
+        - name: init-myservice
+          image: busybox
+          command: [ 'sh', '-c', 'echo init' ]
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers
+          value:
+            - name: init-myservice
+              image: busybox
+              command: [ 'sh', '-c', 'echo init' ]
+
   - it: should not render the env key when no environment variables are provided
     set:
       envVarsBase: []

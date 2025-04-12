@@ -62,6 +62,11 @@ envVars: []
 ## Configure a base set of environment variables, to be overridden by any environment variables specified by `envVars`
 envVarsBase: []
 
+## Optional list of init containers to run before app containers start
+##
+## See: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+initContainers: []
+
 ## Configure liveness probe, checks if the container is still running as expected. If the liveness probe fails,
 ## the kubelet kills the container.
 ##
