@@ -374,3 +374,54 @@ tests:
             - mountPath: /opt/data
               name: data
               subPath: downloads
+
+  - it: should not render the env key when no environment variables are provided
+    set:
+      envVarsBase: []
+      envVars: []
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].env
+
+  - it: should render environment variables from envVarsBase
+    set:
+      envVarsBase:
+        - name: LOG_LEVEL
+          value: INFO
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env
+          value:
+            - name: LOG_LEVEL
+              value: INFO
+
+  - it: should render environment variables from envVars
+    set:
+      envVars:
+        - name: LOG_LEVEL
+          value: DEBUG
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env
+          value:
+            - name: LOG_LEVEL
+              value: DEBUG
+
+  - it: should override envVarsBase with envVars
+    set:
+      envVarsBase:
+        - name: LOG_LEVEL
+          value: INFO
+        - name: FEATURE_FLAG
+          value: "true"
+      envVars:
+        - name: LOG_LEVEL
+          value: DEBUG
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env
+          value:
+            - name: FEATURE_FLAG
+              value: "true"
+            - name: LOG_LEVEL
+              value: DEBUG

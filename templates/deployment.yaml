@@ -1,5 +1,6 @@
 {{- $volumes := list }}
 {{- $volumeMounts := list }}
+{{- $envVars := dict }}
 
 {{- range .Values.volumes }}
   {{- $volume := omit . "mount" }}
@@ -22,6 +23,13 @@
     {{- $volumeMount := merge (dict "name" .name) .mount }}
     {{- $volumeMounts = append $volumeMounts $volumeMount }}
   {{- end }}
+{{- end }}
+
+{{- range .Values.envVarsBase }}
+  {{- $_ := set $envVars .name . }}
+{{- end }}
+{{- range .Values.envVars }}
+  {{- $_ := set $envVars .name . }}
 {{- end }}
 
 apiVersion: apps/v1
@@ -91,6 +99,17 @@ spec:
               readOnly: {{ .readOnly }}
               {{- end }}
             {{- end }}
+          {{- end }}
+          {{- if $envVars}}
+          env:
+          {{- range $name, $entry := $envVars }}
+            - name: {{ $entry.name | quote }}
+              {{- if hasKey $entry "valueFrom" }}
+              valueFrom: {{ toYaml $entry.valueFrom | nindent 16 }}
+              {{- else }}
+              value: {{ $entry.value | quote }}
+              {{- end }}
+          {{- end }}
           {{- end }}
       {{- if gt (len $volumes) 0 }}
       volumes:

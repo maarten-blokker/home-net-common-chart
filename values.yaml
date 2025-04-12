@@ -41,6 +41,27 @@ ports:
 service:
   type: ClusterIP
 
+## Configure environment variables for the container
+##
+## Example:
+## envVars:
+##   - name: TZ
+##     value: Europe/Amsterdam
+##   - name: DB_USER
+##     valueFrom:
+##       configMapKeyRef:
+##         name: app-config
+##         key: db-user
+##   - name: DB_PASS
+##     valueFrom:
+##       secretKeyRef:
+##         name: app-secrets
+##         key: db-password
+envVars: []
+
+## Configure a base set of environment variables, to be overridden by any environment variables specified by `envVars`
+envVarsBase: []
+
 ## Configure liveness probe, checks if the container is still running as expected. If the liveness probe fails,
 ## the kubelet kills the container.
 ##
