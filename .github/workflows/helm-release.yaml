@@ -41,7 +41,10 @@ jobs:
         run: helm plugin install https://github.com/helm-unittest/helm-unittest.git
 
       - name: Run Helm unit-test
-        run: helm unittest charts
+        run: |
+          for dir in $(ls -d charts/*/); do
+            helm unittest -q $dir
+          done
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.7.0
