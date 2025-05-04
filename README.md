@@ -46,7 +46,7 @@ helm plugin install https://github.com/helm-unittest/helm-unittest.git
 To run tests:
 
 ```sh
-helm unittest ./
+helm unittest charts
 ```
 
 ## Contributing
