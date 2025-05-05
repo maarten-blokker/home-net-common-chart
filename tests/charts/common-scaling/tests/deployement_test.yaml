@@ -1,0 +1,23 @@
+suite: Test deployment template features
+
+release:
+  name: unit-test
+
+tests:
+  - it: sets a replica count
+    documentIndex: &DeploymentDocument 0
+    set:
+      replicaCount: 5
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 5
+
+  - it: has no replica count when autoscaling is enabled
+    documentIndex: *DeploymentDocument
+    set:
+      autoscaling:
+        enabled: true
+    asserts:
+      - notExists:
+          path: spec.replicas

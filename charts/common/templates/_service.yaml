@@ -1,10 +1,11 @@
+{{- define "common.service" -}}
+---
 {{- $servicePorts := list }}
 {{- range .Values.ports }}
   {{- if hasKey . "servicePort" }}
     {{- $servicePorts = append $servicePorts . }}
   {{- end }}
 {{- end }}
-
 {{- if $servicePorts }}
 apiVersion: v1
 kind: Service
@@ -23,4 +24,5 @@ spec:
     {{- end }}
   selector:
     {{- include "common.selectorLabels" . | nindent 4 }}
+{{- end }}
 {{- end }}

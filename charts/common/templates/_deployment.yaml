@@ -1,3 +1,5 @@
+{{- define "common.deployment" -}}
+---
 {{- $volumes := list }}
 {{- $volumeMounts := list }}
 {{- $envVars := dict }}
@@ -31,7 +33,6 @@
 {{- range .Values.envVars }}
   {{- $_ := set $envVars .name . }}
 {{- end }}
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -134,3 +135,4 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+{{- end }}

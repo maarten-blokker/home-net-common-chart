@@ -1,0 +1,116 @@
+suite: Test deployment template features
+
+release:
+  name: unit-test
+
+tests:
+
+  - it: "renders volumes with their volumeMounts"
+    documentIndex: &DeploymentDocument 0
+    set:
+      volumes:
+        - name: vol-nfs
+          nfs:
+            server: 10.0.0.1
+            path: /exports/shared
+          mount:
+            mountPath: "/mnt/vol/media"
+            subPath: "media"
+            readOnly: true
+        - name: vol-logs
+          hostPath:
+            path: /var/log/my-app
+            type: DirectoryOrCreate
+          mount:
+            mountPath: /var/logs
+        - name: vol-dir
+          emptyDir: { }
+          mount:
+            mountPath: "/mnt/vol/tmp"
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes
+          value:
+            - name: "vol-nfs"
+              nfs:
+                server: 10.0.0.1
+                path: /exports/shared
+            - name: vol-logs
+              hostPath:
+                path: /var/log/my-app
+                type: DirectoryOrCreate
+            - name: vol-dir
+              emptyDir: { }
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts
+          value:
+            - name: vol-nfs
+              mountPath: /mnt/vol/media
+              subPath: media
+              readOnly: true
+            - name: vol-logs
+              mountPath: /var/logs
+            - name: vol-dir
+              mountPath: /mnt/vol/tmp
+
+  - it: "renders volumeMounts only for persistent volume claims with a mount"
+    documentIndex: *DeploymentDocument
+    set:
+      persistentVolumeClaims:
+        - name: pvc-with-mount
+          accessModes: [ "ReadWriteOnce" ]
+          storageClassName: standard
+          resources:
+            requests:
+              storage: 5Gi
+          mount:
+            mountPath: /data
+        - name: pvc-no-mount
+          accessModes: [ "ReadWriteOnce" ]
+          storageClassName: standard
+          resources:
+            requests:
+              storage: 10Gi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts
+          value:
+            - name: pvc-with-mount
+              mountPath: /data
+
+  - it: "renders a combination of volumes and persistent volume claims"
+    documentIndex: *DeploymentDocument
+    set:
+      volumes:
+        - name: cache
+          emptyDir: { }
+          mount:
+            mountPath: /tmp/cache
+            readOnly: false
+      persistentVolumeClaims:
+        - name: data
+          accessModes: [ "ReadWriteOnce" ]
+          storageClassName: standard
+          resources:
+            requests:
+              storage: 1Gi
+          mount:
+            mountPath: /opt/data
+            subPath: downloads
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes
+          value:
+            - emptyDir: { }
+              name: cache
+            - name: data
+              persistentVolumeClaim:
+                claimName: unit-test-common-volumes-data
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts
+          value:
+            - mountPath: /tmp/cache
+              name: cache
+            - mountPath: /opt/data
+              name: data
+              subPath: downloads

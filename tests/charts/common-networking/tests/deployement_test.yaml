@@ -1,0 +1,58 @@
+suite: Test deployment template features
+
+release:
+  name: unit-test
+
+tests:
+  - it: fails to render if ports list is empty
+    documentIndex: &DeploymentDocument 0
+    set:
+      ports: [ ]
+    asserts:
+      - isNullOrEmpty:
+          path: spec.template.spec.containers[0].ports
+
+  - it: renders container port with default protocol
+    documentIndex: *DeploymentDocument
+    set:
+      ports:
+        - name: http
+          containerPort: 3000
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports
+          value:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+
+  - it: renders multiple ports with mixed protocol and containerPort defined
+    documentIndex: *DeploymentDocument
+    set:
+      ports:
+        - name: web
+          containerPort: 8080
+        - name: metrics
+          containerPort: 9090
+          protocol: UDP
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports
+          value:
+            - name: web
+              containerPort: 8080
+              protocol: TCP
+            - name: metrics
+              containerPort: 9090
+              protocol: UDP
+
+  - it: defaults protocol to TCP if not provided
+    documentIndex: *DeploymentDocument
+    set:
+      ports:
+        - name: web
+          containerPort: 80
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports[?(@.name == "web")].protocol
+          value: TCP

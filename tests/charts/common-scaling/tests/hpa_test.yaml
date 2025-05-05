@@ -1,8 +1,31 @@
-suite: Test suite for horizontal pod autoscaler resource
-templates:
-  - hpa.yaml
+suite: Test autoscaler template features
+
+release:
+  name: unit-test
+
 tests:
-  - it: Should create an HPA when autoscaling is enabled
+  - it: renders no HPA by default
+    documentSelector: &AutoscalerDocuments
+      path: kind
+      value: HorizontalPodAutoscaler
+      skipEmptyTemplates: true
+    asserts:
+      - hasDocuments:
+          count: 0
+          filterAware: true
+
+  - it: renders no HPA when autoscaling is disabled
+    documentSelector: *AutoscalerDocuments
+    set:
+      autoscaling:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+          filterAware: true
+
+  - it: renders an HPA when autoscaling is enabled
+    documentSelector: *AutoscalerDocuments
     set:
       autoscaling:
         enabled: true
@@ -21,15 +44,8 @@ tests:
           path: spec.maxReplicas
           value: 5
 
-  - it: Should not create an HPA when autoscaling is disabled
-    set:
-      autoscaling:
-        enabled: false
-    asserts:
-      - hasDocuments:
-          count: 0
-
-  - it: Should target the correct deployment
+  - it: targets the correct deployment
+    documentSelector: *AutoscalerDocuments
     set:
       autoscaling:
         enabled: true
@@ -43,9 +59,10 @@ tests:
           value: "Deployment"
       - equal:
           path: spec.scaleTargetRef.name
-          value: "RELEASE-NAME-common"
+          value: "unit-test-common-scaling"
 
-  - it: Should include CPU utilization target when defined
+  - it: includes CPU utilization target when defined
+    documentSelector: *AutoscalerDocuments
     set:
       autoscaling:
         enabled: true
@@ -61,7 +78,8 @@ tests:
                   type: Utilization
                   averageUtilization: 90
 
-  - it: Should include memory utilization target when defined
+  - it: includes memory utilization target when defined
+    documentSelector: *AutoscalerDocuments
     set:
       autoscaling:
         enabled: true
@@ -77,7 +95,8 @@ tests:
                   type: Utilization
                   averageUtilization: 60
 
-  - it: Should include both CPU and memory utilization targets when both are defined
+  - it: includes both CPU and memory utilization targets when both are defined
+    documentSelector: *AutoscalerDocuments
     set:
       autoscaling:
         enabled: true
@@ -102,7 +121,8 @@ tests:
               averageUtilization: 65
               type: Utilization
 
-  - it: Should include a default utilization target when no target is define
+  - it: includes a default utilization target when no target is define
+    documentSelector: *AutoscalerDocuments
     set:
       autoscaling:
         enabled: true

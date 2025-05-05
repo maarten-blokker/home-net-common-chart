@@ -1,24 +1,20 @@
 suite: Test suite for service resource
-templates:
-  - service.yaml
 
 tests:
-  - it: should render a service by default
+  - it: renders no service when there are no ports
+    documentSelector: &ServiceDocument
+      path: kind
+      value: Service
+      skipEmptyTemplates: true
+    set:
+      ports: []
     asserts:
-      - isKind:
-          of: Service
-      - equal:
-          path: spec.type
-          value: ClusterIP
-      - equal:
-          path: spec.ports
-          value:
-            - name: http
-              port: 80
-              targetPort: http
-              protocol: TCP
+      - hasDocuments:
+          count: 0
+          filterAware: true
 
-  - it: should not render service when there are no service ports
+  - it: renders no service when there are no service ports
+    documentSelector: *ServiceDocument
     set:
       ports:
         - name: web
@@ -26,15 +22,10 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+          filterAware: true
 
-  - it: should not render service with no ports
-    set:
-      ports: []
-    asserts:
-      - hasDocuments:
-          count: 0
-
-  - it: should render a service when a service port is defined
+  - it: renders a service when a service port is defined
+    documentSelector: *ServiceDocument
     set:
       ports:
         - name: web
@@ -52,7 +43,8 @@ tests:
           path: spec.type
           value: ClusterIP
 
-  - it: should render a service with type LoadBalancer
+  - it: renders a service with type LoadBalancer
+    documentSelector: *ServiceDocument
     set:
       service:
         type: LoadBalancer
@@ -65,7 +57,8 @@ tests:
           path: spec.type
           value: LoadBalancer
 
-  - it: should render a service with multiple ports
+  - it: renders a service with multiple ports
+    documentSelector: *ServiceDocument
     set:
       ports:
         - name: web

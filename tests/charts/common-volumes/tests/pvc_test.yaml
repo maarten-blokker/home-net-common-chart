@@ -1,19 +1,24 @@
-suite: Test suite for persistent volume claim resource
-templates:
-  - templates/pvc.yaml
+suite: Test pvc template features
 
 release:
   name: unit-test
 
 tests:
   - it: should not render volumes or volumeMounts if PVC list is empty
+    documentSelector: &VolumeClaimDocuments
+      path: kind
+      value: PersistentVolumeClaim
+      skipEmptyTemplates: true
+      matchMany: true
     set:
       persistentVolumeClaims: [ ]
     asserts:
       - hasDocuments:
           count: 0
+          filterAware: true
 
   - it: should render a PVC
+    documentSelector: *VolumeClaimDocuments
     set:
       persistentVolumeClaims:
         - name: data
@@ -25,9 +30,10 @@ tests:
     asserts:
       - hasDocuments:
           count: 1
+          filterAware: true
       - equal:
           path: metadata.name
-          value: unit-test-common-data
+          value: unit-test-common-volumes-data
       - equal:
           path: spec
           value:
@@ -38,6 +44,7 @@ tests:
                 storage: 1Gi
 
   - it: should render multiple PVCs
+
     set:
       persistentVolumeClaims:
         - name: cache
@@ -53,10 +60,8 @@ tests:
     asserts:
       - hasDocuments:
           count: 2
-      - equal:
-          path: metadata.name
-          value: unit-test-common-cache
-        documentIndex: 0
+          filterAware: true
+        documentSelector: *VolumeClaimDocuments
       - equal:
           path: spec
           value:
@@ -64,11 +69,9 @@ tests:
             resources:
               requests:
                 storage: 10Gi
-        documentIndex: 0
-      - equal:
+        documentSelector:
           path: metadata.name
-          value: unit-test-common-tmp
-        documentIndex: 1
+          value: unit-test-common-volumes-cache
       - equal:
           path: spec
           value:
@@ -77,9 +80,12 @@ tests:
             resources:
               requests:
                 storage: 5Gi
-        documentIndex: 1
+        documentSelector:
+          path: metadata.name
+          value: unit-test-common-volumes-tmp
 
   - it: should omit storageClassName if not specified
+    documentSelector: *VolumeClaimDocuments
     set:
       persistentVolumeClaims:
         - name: simple
@@ -91,6 +97,7 @@ tests:
           path: spec.storageClassName
 
   - it: should default accessModes to "ReadWriteOnce"
+    documentSelector: *VolumeClaimDocuments
     set:
       persistentVolumeClaims:
         - name: simple

@@ -1,0 +1,18 @@
+{{- define "common.main" -}}
+{{ include "common.deployment" . }}
+{{ include "common.service" . }}
+{{ include "common.pvc" . }}
+
+{{- if .Values.serviceAccount.create -}}
+{{ include "common.sa" . }}
+{{- end}}
+
+{{- if .Values.autoscaling.enabled }}
+{{ include "common.hpa" . }}
+{{- end}}
+
+{{- if .Values.ingress.enabled -}}
+{{ include "common.ingress" . }}
+{{- end}}
+
+{{- end}}

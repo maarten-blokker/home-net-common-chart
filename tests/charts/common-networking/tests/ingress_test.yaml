@@ -1,18 +1,18 @@
-suite: Test suite for ingress resource
-templates:
-  - templates/ingress.yaml
+suite: Test ingress template features
 
 tests:
   - it: does not render anything if not explicitly enabled
+    documentSelector: &IngressDocument
+      path: kind
+      value: Ingress
+      skipEmptyTemplates: true
     asserts:
-      - containsDocument:
-          kind: Ingress
-        not: true
       - hasDocuments:
           count: 0
-      - matchSnapshot: { }
+          filterAware: true
 
   - it: renders an Ingress if it's enabled
+    documentSelector: *IngressDocument
     set:
       ingress.enabled: true
     asserts:
@@ -20,6 +20,7 @@ tests:
           of: Ingress
 
   - it: sets annotations if given
+    documentSelector: *IngressDocument
     set:
       ingress.enabled: true
       ingress.annotations:
@@ -35,6 +36,7 @@ tests:
             ingress.kubernetes.io/rewrite-target: /
 
   - it: configures TLS by default based on host
+    documentSelector: *IngressDocument
     set:
       ingress.enabled: true
       ingress.hosts:
@@ -48,6 +50,7 @@ tests:
               secretName: unit.test.com-tls
 
   - it: configures TLS by default based on host, but only if a single host is specified
+    documentSelector: *IngressDocument
     set:
       ingress.enabled: true
       ingress.hosts:
@@ -57,6 +60,7 @@ tests:
       - failedTemplate: { }
 
   - it: configures TLS as is
+    documentSelector: *IngressDocument
     set:
       ingress.enabled: true
       ingress.tls:
@@ -74,6 +78,7 @@ tests:
               secretName: any.local.tls
 
   - it: disables TLS if an empty array is explicitly set
+    documentSelector: *IngressDocument
     set:
       ingress.enabled: true
       ingress.tls: []
@@ -82,6 +87,7 @@ tests:
           path: spec.tls
 
   - it: fails if no http port is available and no paths are given
+    documentSelector: *IngressDocument
     set:
       ingress:
         enabled: true
@@ -94,6 +100,7 @@ tests:
           errorPattern: "no servicePort"
 
   - it: fails if no http port is available and no paths are given
+    documentSelector: *IngressDocument
     set:
       ingress:
         enabled: true

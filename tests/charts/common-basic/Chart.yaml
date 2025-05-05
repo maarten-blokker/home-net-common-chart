@@ -1,0 +1,12 @@
+apiVersion: v2
+name: common-basic
+description: A Helm chart used to test the common chart's basic features
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+dependencies:
+  - name: common
+    version: "*"
+    repository: "file://../../../charts/common"
+    import-values:
+      - default

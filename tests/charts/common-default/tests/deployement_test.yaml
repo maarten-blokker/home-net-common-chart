@@ -1,0 +1,67 @@
+suite: Test deployment defaults
+
+chart:
+  version: 1.2.3
+  appVersion: 3.2.1
+
+release:
+  name: unit-test
+
+tests:
+  - it: creates a deployment
+    documentIndex: &DeploymentDocument 0
+    asserts:
+      - isKind:
+          of: Deployment
+
+  - it: has a replica count of 1 by default
+    documentIndex: *DeploymentDocument
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 1
+
+  - it: has correct labels by default
+    documentIndex: *DeploymentDocument
+    asserts:
+      - equal:
+          path: metadata.labels
+          value:
+            app.kubernetes.io/instance: unit-test
+            app.kubernetes.io/name: common-default
+            app.kubernetes.io/version: 3.2.1
+            app.kubernetes.io/managed-by: Helm
+            helm.sh/chart: common-default-1.2.3
+      - equal:
+          path: spec.selector.matchLabels
+          value:
+            app.kubernetes.io/instance: unit-test
+            app.kubernetes.io/name: common-default
+      - equal:
+          path: spec.template.metadata.labels
+          value:
+            app.kubernetes.io/instance: unit-test
+            app.kubernetes.io/name: common-default
+
+  - it: creates a pod with a container using the default image
+    documentIndex: *DeploymentDocument
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 1
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: nginx:latest
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: IfNotPresent
+
+  - it: renders container port with default protocol
+    documentIndex: *DeploymentDocument
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports
+          value:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
