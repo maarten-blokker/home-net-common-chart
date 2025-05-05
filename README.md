@@ -18,17 +18,27 @@ multiple deployments.
 
 ## Installation
 
-This chart is meant to be used as a dependency in other Helm charts. To include it, add the following to
-your `Chart.yaml`:
+This chart is meant to be used as a dependency in other Helm charts. To include it, add the following dependency to
+your chart:
 
 ```yaml
+# file: Chart.yaml
 dependencies:
   - name: common-chart
     version: <version>
     repository: https://common-chart.home-net.app
+    import-values:
+      - default
 ```
 
-Then, update dependencies using:
+Then, add a file to your templates directory that renders all the library chart's templates:
+
+```yaml
+# file: templates/main.yaml
+{{ include "common.main" . }}
+```
+
+Finally, update dependencies using:
 
 ```sh
 helm dependency update
