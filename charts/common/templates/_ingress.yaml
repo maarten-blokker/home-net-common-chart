@@ -21,7 +21,9 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
+  {{- if .Values.ingress.className }}
   ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
   {{- if and (hasKey .Values.ingress "tls") (not (empty .Values.ingress.tls)) }}
   tls:
     {{- range .Values.ingress.tls }}

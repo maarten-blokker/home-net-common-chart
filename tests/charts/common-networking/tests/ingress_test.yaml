@@ -38,9 +38,10 @@ tests:
   - it: configures TLS by default based on host
     documentSelector: *IngressDocument
     set:
-      ingress.enabled: true
-      ingress.hosts:
-        - host: unit.test.com
+      ingress:
+        enabled: true
+        hosts:
+          - host: unit.test.com
     asserts:
       - equal:
           path: spec.tls
@@ -52,22 +53,24 @@ tests:
   - it: configures TLS by default based on host, but only if a single host is specified
     documentSelector: *IngressDocument
     set:
-      ingress.enabled: true
-      ingress.hosts:
-        - host: host1.test.com
-        - host: host2.test.com
+      ingress:
+        enabled: true
+        hosts:
+          - host: host1.test.com
+          - host: host2.test.com
     asserts:
       - failedTemplate: { }
 
   - it: configures TLS as is
     documentSelector: *IngressDocument
     set:
-      ingress.enabled: true
-      ingress.tls:
-        - hosts:
-            - one.local
-            - two.local
-          secretName: any.local.tls
+      ingress:
+        enabled: true
+        tls:
+          - hosts:
+              - one.local
+              - two.local
+            secretName: any.local.tls
     asserts:
       - equal:
           path: spec.tls
@@ -80,8 +83,9 @@ tests:
   - it: disables TLS if an empty array is explicitly set
     documentSelector: *IngressDocument
     set:
-      ingress.enabled: true
-      ingress.tls: []
+      ingress:
+        enabled: true
+        tls: [ ]
     asserts:
       - isNull:
           path: spec.tls
@@ -89,8 +93,7 @@ tests:
   - it: fails if no http port is available and no paths are given
     documentSelector: *IngressDocument
     set:
-      ingress:
-        enabled: true
+      ingress.enabled: true
       ports:
         - name: metrics
           containerPort: 90
@@ -102,11 +105,30 @@ tests:
   - it: fails if no http port is available and no paths are given
     documentSelector: *IngressDocument
     set:
-      ingress:
-        enabled: true
+      ingress.enabled: true
       ports:
         - name: http
           containerPort: 90
     asserts:
       - failedTemplate:
           errorPattern: "no servicePort"
+
+  - it: renders no ingress class name by default
+    documentSelector: *IngressDocument
+    set:
+      ingress.enabled: true
+    asserts:
+      - notExists:
+          path: spec.ingressClassName
+
+  - it: renders an ingress class name if provided
+    documentSelector: *IngressDocument
+    set:
+      ingress:
+        enabled: true
+        className: cloudflare
+    asserts:
+      - equal:
+          path: spec.ingressClassName
+          value: cloudflare
+
