@@ -3,6 +3,10 @@
 {{ include "common.service" . }}
 {{ include "common.pvc" . }}
 
+{{- if $.Values.envVarsSecret }}
+{{ include "common.secret" . }}
+{{- end}}
+
 {{- if .Values.serviceAccount.create -}}
 {{ include "common.sa" . }}
 {{- end}}

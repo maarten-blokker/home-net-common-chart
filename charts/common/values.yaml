@@ -64,6 +64,9 @@ exports:
     ## Configure a base set of environment variables, to be overridden by any environment variables specified by `envVars`
     envVarsBase: []
 
+    ## Key-value map used to populate a Kubernetes Secret with sensitive data
+    envVarsSecret: {}
+
     ## Optional list of init containers to run before app containers start
     ##
     ## See: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
