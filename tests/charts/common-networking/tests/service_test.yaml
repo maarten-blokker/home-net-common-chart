@@ -43,6 +43,35 @@ tests:
           path: spec.type
           value: ClusterIP
 
+  - it: renders a service with the correct annotations
+    documentSelector: *ServiceDocument
+    set:
+      ports:
+        - name: web
+          containerPort: 80
+          servicePort: 8080
+      service:
+        annotations:
+          metallb.universe.tf/ip-allocated-from-pool: metallb-pool
+    asserts:
+      - equal:
+          path: metadata.annotations
+          value:
+            metallb.universe.tf/ip-allocated-from-pool: metallb-pool
+
+  - it: fails when specifying a loadbalancer IP when service is not type LoadBalancer
+    set:
+      service:
+        type: ClusterIP
+        loadBalancerIP: 1.1.1.1
+      ports:
+        - name: web
+          containerPort: 80
+          servicePort: 8080
+    asserts:
+      - failedTemplate:
+          errorPattern: "loadBalancerIP specified, but service is not of type 'LoadBalancer'"
+
   - it: renders a service with type LoadBalancer
     documentSelector: *ServiceDocument
     set:
@@ -56,6 +85,24 @@ tests:
       - equal:
           path: spec.type
           value: LoadBalancer
+
+  - it: renders a service with type LoadBalancer and load balancer IP
+    documentSelector: *ServiceDocument
+    set:
+      service:
+        type: LoadBalancer
+        loadBalancerIP: 1.1.1.1
+      ports:
+        - name: web
+          containerPort: 80
+          servicePort: 8080
+    asserts:
+      - equal:
+          path: spec.type
+          value: LoadBalancer
+      - equal:
+          path: spec.loadBalancerIP
+          value: 1.1.1.1
 
   - it: renders a service with multiple ports
     documentSelector: *ServiceDocument

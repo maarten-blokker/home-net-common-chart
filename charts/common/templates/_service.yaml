@@ -6,6 +6,11 @@
     {{- $servicePorts = append $servicePorts . }}
   {{- end }}
 {{- end }}
+
+{{- if and (hasKey .Values.service "loadBalancerIP") (not (eq .Values.service.type "LoadBalancer"))}}
+  {{ fail "loadBalancerIP specified, but service is not of type 'LoadBalancer'" }}
+{{- end }}
+
 {{- if $servicePorts }}
 apiVersion: v1
 kind: Service
@@ -13,8 +18,15 @@ metadata:
   name: {{ include "common.fullname" . }}
   labels:
     {{- include "common.labels" . | nindent 4 }}
+  {{- with .Values.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   type: {{ .Values.service.type }}
+  {{- if .Values.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.service.loadBalancerIP }}
+  {{- end }}
   ports:
     {{- range $servicePorts }}
     - name: {{ .name }}
